@@ -104,7 +104,7 @@ def find_products(query):
     return filtered.head(5)  # Return top 5 results
 
 # Test the new function with multiple conditions:
-print(find_products("Find me Apple laptops under $1000"))
+#print(find_products("Find me Apple laptops under $1000"))
 #print(find_products("Find me Sony TVs  delivered on Same-day and under $500"))
 #print(find_products("Find me Sony TVs that will be delivered on Same-day and under $500"))
 #print(find_products("Find me Furniture with at least 20% off"))
@@ -112,232 +112,7 @@ print(find_products("Find me Apple laptops under $1000"))
 #print(find_products("Find me Sony TVs under $500 rated above 4.5 stars with at least 30% off"))
 #print(find_products("Find me Apple laptops under $1000 rated above 4 stars with at least 20% off"))
 
-"""**Version 1 for prompt chatbot**"""
 
-# Define a prompt template
-prompt = PromptTemplate(
-    input_variables=["query"],
-    template="I am a helpful shopping assistant.\n{query}"
-)
-
-# Create LangChain LLMChain
-chain = LLMChain(llm=llm, prompt=prompt)
-
-def classify_query(user_query):
-    """Classifies the query type based on keywords."""
-    user_query = user_query.lower()
-
-    if any(word in user_query for word in ["find", "show", "recommend", "under", "cheapest", "I need"]):
-        return "product_search"
-    elif any(word in user_query for word in ["stock", "available", "in stock","in-stock"]):
-        return "availability_check"
-    elif any(word in user_query for word in ["deliver", "shipping", "arrive"]):
-        return "delivery_check"
-    else:
-        return "general"
-
-# Global variable to store the last searched products
-filtered_products = pd.DataFrame()  # Empty DataFrame at the start
-
-def chat_with_bot(user_query):
-    """Handles user queries with chatbot and product recommendations."""
-    global filtered_products  # Access the global variable
-    query_type = classify_query(user_query)
-
-    if query_type == "product_search":
-        # Search for products
-        filtered_products = find_products(user_query)
-
-        if not filtered_products.empty:
-            product_list = "\n".join([f"{row['name']} - ${row['price'] } - {row['category'] } - {row['brand'] } -  {row['rating'] } - {row['discount'] }" for _, row in filtered_products.iterrows()])
-            response_text = f"Here are some options:\n{product_list}"
-        else:
-            response_text = "Sorry, no matching products found."
-
-    elif query_type == "availability_check":
-        if not filtered_products.empty:
-            in_stock = [f"Checking stock for: {row['name']} - Stock: {row['stock']}" for _, row in filtered_products.iterrows() if row["stock"] > 0]
-            response_text = "\n".join(in_stock) if in_stock else "None of these items are currently in stock."
-
-        else:
-            response_text = "Please search for a product first."
-
-    elif query_type == "delivery_check":
-        #if 'filtered_products' in locals() and not filtered_products.empty:
-        if not filtered_products.empty:
-            fast_delivery = [row["name"] for _, row in filtered_products.iterrows() if row["delivery_time"] == "Next Day" or row["delivery_time"] == "Same-day"]
-            response_text = f"These items can be delivered today or tomorrow maximum: {', '.join(fast_delivery)}" if fast_delivery else "None of these items can be delivered today or tomorrow."
-        else:
-            response_text = "Please search for a product first."
-
-    else:
-        response_text = "I'm here to help! You can ask me to find products, check availability, or delivery options."
-
-    # Generate chatbot response
-    chatbot_reply = chain.run(response_text)
-
-    return chatbot_reply
-
-############################################## Test chatbot################################################################
-exit_words = {"thank you", "bye", "exit", "quit","thanks", "thanks!", "thanks alot", "ok"}
-
-while True:
-    inquiry = input("Enter your inquiry:  ").strip().lower()
-    if inquiry in exit_words:
-        print("Any time. Goodbye!")
-        break
-    print(chat_with_bot(inquiry))
-
-#Samples of questions:
-
-#Group 1 questions:
-#print(chat_with_bot("Hi"))
-#print(chat_with_bot("Show me Apple Laptops under $500"))
-#print(chat_with_bot("Can these be delivered tomorrow?"))
-
-#Group 2 questions:
-#print(chat_with_bot("I want to ask about something"))
-#print(find_products("I need Sony Accessories under $500"))
-#print(chat_with_bot("How many items are available?"))
-
-#Group 3 questions:
-#print(find_products("Find me Furniture with at least 20% off"))
-#print(chat_with_bot("Are these in stock?"))
-#print(chat_with_bot("ok, thank you"))
-#print(chat_with_bot("thank you"))
-
-#Group 4 questions:
-#print(chat_with_bot("Good evening!"))
-#print(find_products("Find me Sony Laptops under $500 rated above 4.5 stars with at least 30% off"))
-#print(chat_with_bot("Are these in stock?"))
-#print(chat_with_bot("Can these be delivered today?"))
-#print(chat_with_bot("I have another inqury"))
-#print(find_products("Find me Electronics rated above 4 stars"))
-#print(chat_with_bot("How many items are in stock?"))
-#print(chat_with_bot("thanks"))
-
-#Group 5 questions:
-#print(chat_with_bot("Are these in stock?"))
-#print(chat_with_bot("ok"))
-
-"""**Modified version 2 for prompt chatbot**"""
-
-import os  # Import os to check file existence
-
-# File to save filtered products
-filtered_products_file = "filtered_products.csv"
-
-# Load last saved filtered products if file exists
-if os.path.exists(filtered_products_file):
-    filtered_products = pd.read_csv(filtered_products_file)
-else:
-    filtered_products = pd.DataFrame()  # Start with an empty DataFrame
-
-
-
-# Define a prompt template
-prompt = PromptTemplate(
-    input_variables=["query"],
-    template="I am a helpful shopping assistant.\n{query}"
-)
-
-
-# Create LangChain LLMChain
-chain = LLMChain(llm=llm, prompt=prompt)
-
-def classify_query(user_query):
-    """Classifies the query type based on keywords."""
-    user_query = user_query.lower()
-
-    if any(word in user_query for word in ["find", "show", "recommend", "under", "cheapest", "I need"]):
-        return "product_search"
-    elif any(word in user_query for word in ["stock", "available", "in stock","in-stock"]):
-        return "availability_check"
-    elif any(word in user_query for word in ["deliver", "shipping", "arrive"]):
-        return "delivery_check"
-    else:
-        return "general"
-
-def chat_with_bot(user_query):
-    """Handles user queries with chatbot and product recommendations."""
-    global filtered_products  # Access the global variable
-    query_type = classify_query(user_query)
-
-    if query_type == "product_search":
-        # Search for products
-        filtered_products = find_products(user_query)
-
-        if not filtered_products.empty:
-            product_list = "\n".join([f"{row['name']} - ${row['price']} - {row['category']} - {row['brand']} - {row['rating']} - {row['discount']}" for _, row in filtered_products.iterrows()])
-            response_text = f"Here are some options:\n{product_list}"
-            # Save filtered products to CSV
-            filtered_products.to_csv(filtered_products_file, index=False)
-        else:
-            response_text = "Sorry, no matching products found."
-
-    elif query_type == "availability_check":
-        if not filtered_products.empty:
-            in_stock = [f"Checking stock for: {row['name']} - Stock: {row['stock']}" for _, row in filtered_products.iterrows() if row["stock"] > 0]
-            response_text = "\n".join(in_stock) if in_stock else "None of these items are currently in stock."
-        else:
-            response_text = "Please search for a product first."
-
-    elif query_type == "delivery_check":
-        if not filtered_products.empty:
-            fast_delivery = [row["name"] for _, row in filtered_products.iterrows() if row["delivery_time"] == "Next Day" or row["delivery_time"] == "Same-day"]
-            response_text = f"These items can be delivered today or tomorrow maximum: {', '.join(fast_delivery)}" if fast_delivery else "None of these items can be delivered today or tomorrow."
-        else:
-            response_text = "Please search for a product first."
-
-    else:
-        response_text = "I'm here to help! You can ask me to find products, check availability, or delivery options."
-
-    # Generate chatbot response
-    chatbot_reply = chain.run(response_text)
-
-    return chatbot_reply
-
-############################################## Test chatbot################################################################
-exit_words = {"thank you", "bye", "exit", "quit","thanks", "thanks!", "thanks alot", "ok"}
-
-while True:
-    inquiry = input("Enter your inquiry:  ").strip().lower()
-    if inquiry in exit_words:
-        print("Any time. Goodbye!")
-        break
-    print(chat_with_bot(inquiry))
-
-#Samples of questions:
-
-#Group 1 questions:
-#print(chat_with_bot("Hi"))
-#print(chat_with_bot("Show me Apple Laptops under $500"))
-#print(chat_with_bot("Can these be delivered tomorrow?"))
-
-#Group 2 questions:
-#print(chat_with_bot("I want to ask about something"))
-#print(find_products("I need Sony Accessories under $500"))
-#print(chat_with_bot("How many items are available?"))
-
-#Group 3 questions:
-#print(find_products("Find me Furniture with at least 20% off"))
-#print(chat_with_bot("Are these in stock?"))
-#print(chat_with_bot("ok, thank you"))
-#print(chat_with_bot("thank you"))
-
-#Group 4 questions:
-#print(chat_with_bot("Good evening!"))
-#print(find_products("Find me Sony Laptops under $500 rated above 4.5 stars with at least 30% off"))
-#print(chat_with_bot("Are these in stock?"))
-#print(chat_with_bot("Can these be delivered today?"))
-#print(chat_with_bot("I have another inqury"))
-#print(find_products("Find me Electronics rated above 4 stars"))
-#print(chat_with_bot("How many items are in stock?"))
-#print(chat_with_bot("thanks"))
-
-#Group 5 questions:
-#print(chat_with_bot("Are these in stock?"))
-#print(chat_with_bot("ok"))
 
 """**Connecting to streamlit**"""
 
@@ -376,6 +151,19 @@ MODEL_NAME = "microsoft/DialoGPT-small"
 filtered_products = pd.DataFrame()
 
 # ✅ Chatbot Function
+def classify_query(user_query):
+    """Classifies the query type based on keywords."""
+    user_query = user_query.lower()
+
+    if any(word in user_query for word in ["find", "show", "recommend", "under", "cheapest", "I need"]):
+        return "product_search"
+    elif any(word in user_query for word in ["stock", "available", "in stock","in-stock"]):
+        return "availability_check"
+    elif any(word in user_query for word in ["deliver", "shipping", "arrive"]):
+        return "delivery_check"
+    else:
+        return "general"
+        
 def chat_with_bot(user_query):
     """Handles user queries with chatbot and product recommendations."""
     global filtered_products
