@@ -19,6 +19,7 @@ from transformers import AutoTokenizer, AutoModelForCausalLM, pipeline # Import 
 
 # Load the small conversational model
 model_name = "microsoft/DialoGPT-small"
+#MODEL_NAME = "tiiuae/falcon-7b-instruct"
 tokenizer = AutoTokenizer.from_pretrained(model_name)
 model = AutoModelForCausalLM.from_pretrained(model_name)
 
@@ -145,7 +146,7 @@ json_path = "product_catalog.json"
 #st.write("✅ Loaded Product Catalog:", df_catalog.head())
 
 # ✅ Choose a Free Model (LLM)
-MODEL_NAME = "microsoft/DialoGPT-small"
+#MODEL_NAME = "microsoft/DialoGPT-small"
 
 # ✅ Initialize global variable
 filtered_products = pd.DataFrame()
@@ -206,7 +207,7 @@ def chat_with_bot(user_query):
 
     # ✅ AI Response via Hugging Face API
     response_text = requests.post(
-        f"https://api-inference.huggingface.co/models/{MODEL_NAME}",
+        f"https://api-inference.huggingface.co/models/{model_name}",
         headers={"Authorization": f"Bearer {HUGGINGFACE_API_KEY}"},
         json={"inputs": user_query, "max_new_tokens": 200}
     )
