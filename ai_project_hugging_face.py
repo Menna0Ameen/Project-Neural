@@ -136,13 +136,13 @@ else:
 
 # ✅ Load Product Catalog
 json_path = "product_catalog.json"
-if not os.path.exists(json_path):
-    st.error(f"ERROR: The JSON file '{json_path}' is missing.")
-    st.stop()
-df_catalog = pd.read_json(json_path)
+#if not os.path.exists(json_path):
+ #   st.error(f"ERROR: The JSON file '{json_path}' is missing.")
+  #  st.stop()
+#df_catalog = pd.read_json(json_path)
 
 # ✅ Debug: Print loaded JSON data
-st.write("✅ Loaded Product Catalog:", df_catalog.head())
+#st.write("✅ Loaded Product Catalog:", df_catalog.head())
 
 # ✅ Choose a Free Model (LLM)
 MODEL_NAME = "microsoft/DialoGPT-small"
